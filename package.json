@@ -1,0 +1,64 @@
+{
+  "name": "electron-injector",
+  "version": "1.0.1",
+  "description": "Biblioteca para el desarrollo de aplicaciones con electron que proporciona una arquitectura robusta con inyección e inversion de dependencias.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup"
+  },
+  "author": {
+    "name": "Alejandro Jorgen",
+    "email": "ajorgenmarten35@gmail.com",
+    "url": "https://github.com/ajorgenmarten"
+  },
+  "keywords": [
+    "electron",
+    "dependency injection",
+    "dependency inversion",
+    "injection",
+    "inversion"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajorgenmarten/electron-di-v3"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/ajorgenmarten/electron-di-v3#readme",
+  "bugs": {
+    "email": "ajorgenmarten35@gmail.com",
+    "url": "https://github.com/ajorgenmarten/electron-di-v3/issues"
+  },
+  "packageManager": "pnpm@10.24.0",
+  "type": "module",
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.1",
+    "@swc/core": "^1.15.3",
+    "@types/debug": "^4.1.12",
+    "@types/node": "^24.10.1",
+    "electron": "^39.2.4",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.5.0",
+    "prettier": "^3.7.2",
+    "rxjs": "^7.8.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.0"
+  },
+  "peerDependencies": {
+    "electron": "^39.2.4",
+    "rxjs": "^7.8.2"
+  },
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "dependencies": {
+    "debug": "^4.4.3",
+    "reflect-metadata": "0.2.2"
+  }
+}

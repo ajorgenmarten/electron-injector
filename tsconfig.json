@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES6", // Compatible con Electron
+    "module": "ESNext", // TSup se encarga de bundlear
+    "lib": ["ES6", "DOM"], // Agrega APIs estándar
+    "declaration": true, // Generar archivos .d.ts
+    "declarationMap": true, // Mapas de declaraciones para debug
+    "outDir": "dist", // Salida de compilación
+    "strict": true, // Buenas prácticas de tipado
+    "esModuleInterop": true, // Importaciones comunes
+    "moduleResolution": "node",
+    "experimentalDecorators": true, // <-- Decoradores ACTIVADOS
+    "emitDecoratorMetadata": true, // <-- Metadata para Reflect
+    "sourceMap": true, // Mapas para debugging
+    "skipLibCheck": true // No chequear tipos de node_modules
+  },
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
+}
