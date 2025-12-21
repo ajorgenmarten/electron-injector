@@ -49,7 +49,7 @@ jobs:
           path: .
 
       - name: View folders
-        run: cd dist && ls -la
+        run: ls -la
 
       - name: Publish to NPM
         run: npm publish --access public
