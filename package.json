@@ -1,6 +1,6 @@
 {
   "name": "electron-injector",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Biblioteca para el desarrollo de aplicaciones con electron que proporciona una arquitectura robusta con inyección e inversion de dependencias.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,13 +21,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ajorgenmarten/electron-di-v3"
+    "url": "git+https://github.com/ajorgenmarten/electron-injector"
   },
   "license": "MIT",
-  "homepage": "https://github.com/ajorgenmarten/electron-di-v3#readme",
+  "homepage": "https://github.com/ajorgenmarten/electron-injector#readme",
   "bugs": {
     "email": "ajorgenmarten35@gmail.com",
-    "url": "https://github.com/ajorgenmarten/electron-di-v3/issues"
+    "url": "https://github.com/ajorgenmarten/electron-injector/issues"
   },
   "packageManager": "pnpm@10.24.0",
   "type": "module",

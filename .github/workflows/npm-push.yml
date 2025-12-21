@@ -49,11 +49,13 @@ jobs:
           path: |
             dist
             package.json
+            .npmignore
+            .npmrc
 
       - name: View folders
-        run: ls -la
+        run: cd dist && ls -la
 
       - name: Publish to NPM
         run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
