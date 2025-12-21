@@ -52,6 +52,8 @@ jobs:
         run: ls -la
 
       - name: Publish to NPM
-        run: npm publish --access public
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+          npm publish --access public --ignore-scripts
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
