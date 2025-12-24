@@ -10,6 +10,10 @@ import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 export class Application {
   private container = new Container();
 
+  static create(configOptions: ConfigOptions) {
+    return new Application(configOptions);
+  }
+
   constructor(private configOptions: ConfigOptions) {
     this.loadProviders();
     this.loadControllers();
