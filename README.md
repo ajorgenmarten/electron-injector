@@ -27,7 +27,7 @@ Nace de la necesidad de crear aplicaciones de escritorio multiplataforma donde n
 
 ## 📦 Instalación
 ```bash
-npm install electron-injector rxjs
+npm install electron-injector rxjs class-validator class-transformer
 ```
 
 > **Nota:**  
@@ -48,34 +48,39 @@ import { Application } from 'electron-injector';
 import { UserController } from './controllers/user.controller';
 import { AuthGuard } from './guards/auth.guard';
 import { UserService } from './services/user.service';
+import { DtoFilter } from './filters/dto.filter';
 
-async function bootstrap() {
-  const electronApp = new Application({
-    providers: [
-      UserService,
-      AuthGuard,
-    ],
-    controllers: [
-      UserController,
-    ],
-  });
-
-  await app.whenReady();
-  
+function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 900,
+    height: 670,
+    autoHideMenuBar: true,
+        ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-    },
-  });
-
-  mainWindow.loadFile('index.html');
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  })
+  
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  } else {
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+  }
 }
 
-bootstrap().catch(console.error);
+app.whenReady().then(() {
+  const application = Application.create({
+    providers: [UserService, AuthGuard],
+    controllers: [UserController]
+  })
+
+  application.useGlobalFilters(DtoFilter)
+
+  application.bootstrap()
+
+  createWindow()
+})
 ```
 
 ## 2. Creando un servicio
@@ -221,7 +226,7 @@ onMessage(@Payload() data: any) {
 
 ` @Payload() `
 
-Inyecta el payload recibido desde el renderer.
+Inyecta el payload recibido desde el renderer. Si defines como tipo una clase decorada con class-validator, esto realiza la validación automática.
 ```ts
 @OnInvoke('update')
 async update(@Payload() data: any) {
