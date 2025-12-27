@@ -1,4 +1,4 @@
-import { CONTROLLER, GUARD, HANDLER, INJECTABLE, PARAM } from './keys';
+import { CONTROLLER, FILTER, GUARD, HANDLER, INJECTABLE, PARAM } from './keys';
 import { CanActivate, Class, InjectableType } from './types';
 
 type ParamMetadataType = 'payload' | 'event' | 'ctx';
@@ -94,5 +94,13 @@ export function SetMetadata(key: any, value: any) {
   ) {
     const targetKey = descriptor ? descriptor.value : target;
     Reflect.defineMetadata(key, value, targetKey);
+  };
+}
+
+export function Catch(...filters: Class[]) {
+  return function (target: Object) {
+    const prevFilters = Reflect.getMetadata(FILTER, target) || [];
+    Reflect.defineMetadata(INJECTABLE, 'singleton', target);
+    Reflect.defineMetadata(FILTER, [...prevFilters, ...filters], target);
   };
 }

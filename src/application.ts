@@ -1,22 +1,56 @@
 import { first, lastValueFrom, Observable } from 'rxjs';
 import { Container } from './container';
 import { DEV_LOGGER, PROD_LOGGER } from './debugger';
-import { ControllerIsNotValid } from './errors';
-import { CONTROLLER, GUARD, HANDLER, PARAM } from './keys';
-import type { CanActivate, ConfigOptions, HandlerMetadata } from './types';
+import {
+  ControllerIsNotValid,
+  DataValidationError,
+  ForbiddenAccessError,
+  IsNotExceptionFilter,
+} from './errors';
+import { CONTROLLER, FILTER, GUARD, HANDLER, PARAM } from './keys';
+import type {
+  CanActivate,
+  Class,
+  ConfigOptions,
+  ExceptionFilter,
+  HandlerMetadata,
+} from './types';
 import { ExecutionContext } from './utilities';
 import { ipcMain, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
+import {
+  getMetadataStorage,
+  validate,
+  ValidatorOptions,
+} from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 
 export class Application {
   private container = new Container();
+  private filters: Map<Class, Class<ExceptionFilter>> = new Map();
 
-  static create(configOptions: ConfigOptions) {
-    return new Application(configOptions);
+  static create(
+    configOptions: ConfigOptions,
+    validationOptions: ValidatorOptions = {},
+  ) {
+    return new Application(configOptions, validationOptions);
   }
 
-  constructor(private configOptions: ConfigOptions) {
+  useGlobalFilters(...filters: Class<ExceptionFilter>[]) {
+    for (const filter of filters) {
+      const exceptionsClasses = Reflect.getMetadata(FILTER, filter);
+      if (!exceptionsClasses) throw new IsNotExceptionFilter(filter.name);
+      exceptionsClasses.forEach((excls: Class) => {
+        this.filters.set(excls, filter);
+        this.container.addProvider(filter);
+      });
+    }
+  }
+
+  constructor(
+    private configOptions: ConfigOptions,
+    private validationOptions: ValidatorOptions,
+  ) {
     this.loadProviders();
-    this.loadControllers();
   }
 
   private loadProviders() {
@@ -28,7 +62,7 @@ export class Application {
     }
   }
 
-  private loadControllers() {
+  bootstrap() {
     for (const controller of this.configOptions.controllers || []) {
       const controllerPrefix = this.getControllerPrefix(controller);
       const controllerDependencies = this.getControllerDependencies(
@@ -74,21 +108,43 @@ export class Application {
           );
 
           for (const guard of guards) {
-            const response = await this.guardExecute(guard, executionContext);
-            if (!response) return false;
+            try {
+              const response = await this.guardExecute(guard, executionContext);
+              if (!response)
+                return {
+                  success: false,
+                  error: new ForbiddenAccessError(
+                    path,
+                    guard.constructor.prototype.name,
+                  ),
+                };
+            } catch (e) {
+              return await this.useFilter(e, executionContext);
+            }
           }
 
-          const params = this.getParams(
-            controllerInstance,
-            controllerMethod,
-            executionContext,
-          );
+          let params = [];
+          try {
+            params = await this.getParams(
+              controllerInstance,
+              controllerMethod,
+              executionContext,
+            );
+          } catch (e) {
+            return await this.useFilter(e, executionContext);
+          }
 
-          const controllerResult = await this.controllerExecute(
-            controllerInstance,
-            controllerInstance[controllerMethod],
-            params,
-          );
+          let controllerResult = undefined;
+
+          try {
+            controllerResult = await this.controllerExecute(
+              controllerInstance,
+              controllerInstance[controllerMethod],
+              params,
+            );
+          } catch (e) {
+            return await this.useFilter(e, executionContext);
+          }
 
           return controllerResult;
         };
@@ -102,7 +158,7 @@ export class Application {
     }
   }
 
-  private getParams(
+  private async getParams(
     target: any,
     propertyKey: string | symbol,
     executionContext: ExecutionContext,
@@ -112,15 +168,45 @@ export class Application {
       | undefined;
 
     if (!params) return [];
-    return params.map((param) => {
-      if (param === 'ctx') return executionContext;
+    return await Promise.all(
+      params.map(async (param, index) => {
+        if (param === 'ctx') return executionContext;
 
-      if (param === 'event') return executionContext.event;
+        if (param === 'event') return executionContext.event;
 
-      if (param === 'payload') return executionContext.payload;
+        if (param === 'payload') {
+          const validationClass = Reflect.getMetadata(
+            'design:paramtypes',
+            target,
+            propertyKey,
+          )[index];
 
-      return undefined;
-    });
+          const metadata = getMetadataStorage().getTargetValidationMetadatas(
+            validationClass,
+            null!,
+            false,
+            false,
+          );
+
+          if (typeof validationClass == 'function' && metadata.length) {
+            const validatorObjectInstance = plainToInstance(
+              validationClass,
+              executionContext.payload,
+            );
+            const errors = await validate(
+              validatorObjectInstance,
+              this.validationOptions,
+            );
+
+            if (errors.length) throw new DataValidationError(errors[0]);
+          }
+
+          return executionContext.payload;
+        }
+
+        return undefined;
+      }),
+    );
   }
 
   private buildPath(controllerPrefix: string, methodPath: string) {
@@ -136,46 +222,63 @@ export class Application {
     guard: CanActivate,
     executionContext: ExecutionContext,
   ) {
-    try {
-      const guardResult = guard.canActivate(executionContext);
-      if (guardResult instanceof Observable) {
-        const result = await lastValueFrom(guardResult.pipe(first()));
-        if (!result) return false;
-      } else if (guardResult instanceof Promise) {
-        const result = await guardResult;
-        if (!result) return false;
-      } else {
-        if (!guardResult) return false;
-      }
-
-      return true;
-    } catch (error) {
-      PROD_LOGGER(error);
-      return false;
+    const guardResult = guard.canActivate(executionContext);
+    if (guardResult instanceof Observable) {
+      const result = await lastValueFrom(guardResult.pipe(first()));
+      if (!result) return false;
+    } else if (guardResult instanceof Promise) {
+      const result = await guardResult;
+      if (!result) return false;
+    } else {
+      if (!guardResult) return false;
     }
+
+    return true;
   }
 
   private async controllerExecute(context: any, target: any, params: any[]) {
-    try {
-      const boundedTarget = target.bind(context);
-      let controllerResult = boundedTarget(...params);
+    const boundedTarget = target.bind(context);
+    let controllerResult = boundedTarget(...params);
 
-      while (
-        controllerResult instanceof Observable ||
-        controllerResult instanceof Promise
-      ) {
-        if (controllerResult instanceof Observable) {
-          controllerResult = await lastValueFrom(controllerResult);
-        } else if (controllerResult instanceof Promise) {
-          controllerResult = await controllerResult;
-        }
+    while (
+      controllerResult instanceof Observable ||
+      controllerResult instanceof Promise
+    ) {
+      if (controllerResult instanceof Observable) {
+        controllerResult = await lastValueFrom(controllerResult);
+      } else if (controllerResult instanceof Promise) {
+        controllerResult = await controllerResult;
+      }
+    }
+
+    return controllerResult;
+  }
+
+  private async useFilter(error: unknown, executionContext: ExecutionContext) {
+    PROD_LOGGER(error);
+
+    for (const [cls, fltr] of this.filters) {
+      if (!(error instanceof cls)) continue;
+
+      const filterInstance = this.container.resolve(fltr);
+
+      const response = (filterInstance as ExceptionFilter).catch(
+        error,
+        executionContext,
+      );
+
+      if (response instanceof Promise) {
+        return await response;
       }
 
-      return controllerResult;
-    } catch (error) {
-      PROD_LOGGER((error as any).message ?? error);
-      return undefined;
+      if (response instanceof Observable) {
+        return await lastValueFrom(response);
+      }
+
+      return response;
     }
+
+    return { success: false, error: error };
   }
 
   private getHandlerMetadata(target: any): HandlerMetadata | undefined {

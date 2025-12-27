@@ -18,6 +18,9 @@ export interface CanActivate {
     context: ExecutionContext,
   ) => boolean | Promise<boolean> | Observable<boolean>;
 }
+export interface ExceptionFilter {
+  catch: (e: any, context: ExecutionContext) => any;
+}
 export interface ConfigOptions {
   providers?: Provider[];
   controllers?: Class[];

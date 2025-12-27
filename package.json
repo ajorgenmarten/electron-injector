@@ -37,6 +37,8 @@
     "@swc/core": "^1.15.3",
     "@types/debug": "^4.1.12",
     "@types/node": "^24.10.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
     "electron": "^39.2.4",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
@@ -49,6 +51,8 @@
     "typescript-eslint": "^8.48.0"
   },
   "peerDependencies": {
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
     "electron": "^39.2.4",
     "rxjs": "^7.8.2"
   },
