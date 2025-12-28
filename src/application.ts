@@ -57,7 +57,7 @@ export class Application {
     for (const provider of this.configOptions.providers || []) {
       this.container.addProvider(provider);
       DEV_LOGGER(
-        `Provider ${typeof provider == 'object' ? provider.provided.name : provider.name} loaded`,
+        `[Electron Injector] Provider ${typeof provider == 'object' ? provider.provided.name : provider.name} loaded`,
       );
     }
   }
@@ -94,7 +94,7 @@ export class Application {
           .concat(handlerGuards)
           .map((guard) => this.container.resolve(guard));
 
-        const path = this.buildPath(controllerPrefix, controllerMethod);
+        const path = this.buildPath(controllerPrefix, handlerMetadata.path);
 
         const handlerCallback = async (
           event: IpcMainEvent | IpcMainInvokeEvent,
