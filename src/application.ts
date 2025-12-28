@@ -154,6 +154,10 @@ export class Application {
         } else {
           ipcMain.on(path, handlerCallback as any);
         }
+
+        DEV_LOGGER(
+          `[Electron Injector] Route ${path} has initialized (${handlerMetadata.type === 'invoke' ? 'invoke' : 'send'})`,
+        );
       }
     }
   }
