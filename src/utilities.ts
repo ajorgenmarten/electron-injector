@@ -65,9 +65,7 @@ export function applyDecorators(...decorators: CallableFunction[]) {
   };
 }
 
-export function createParamDecorator(
-  fn: (context: ExecutionContext) => any,
-): ParameterDecorator {
+export function createParamDecorator(fn: (context: ExecutionContext) => any) {
   return () =>
     function (
       target: Object,
@@ -84,5 +82,5 @@ export function createParamDecorator(
         target,
         propertyKey as string | symbol,
       );
-    };
+    } as ParameterDecorator;
 }
