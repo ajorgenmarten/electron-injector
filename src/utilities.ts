@@ -68,19 +68,21 @@ export function applyDecorators(...decorators: CallableFunction[]) {
 export function createParamDecorator(
   fn: (context: ExecutionContext) => any,
 ): ParameterDecorator {
-  return function (
-    target: Object,
-    propertyKey: string | symbol | undefined,
-    paramIndex: number,
-  ) {
-    const params =
-      Reflect.getMetadata(PARAM, target, propertyKey as string | symbol) ?? [];
-    params[paramIndex] = fn;
-    Reflect.defineMetadata(
-      PARAM,
-      params,
-      target,
-      propertyKey as string | symbol,
-    );
-  };
+  return () =>
+    function (
+      target: Object,
+      propertyKey: string | symbol | undefined,
+      paramIndex: number,
+    ) {
+      const params =
+        Reflect.getMetadata(PARAM, target, propertyKey as string | symbol) ??
+        [];
+      params[paramIndex] = fn;
+      Reflect.defineMetadata(
+        PARAM,
+        params,
+        target,
+        propertyKey as string | symbol,
+      );
+    };
 }
