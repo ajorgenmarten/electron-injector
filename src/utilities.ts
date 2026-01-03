@@ -1,4 +1,5 @@
 import { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
+import { PARAM } from './keys';
 
 export class Reflector {
   get<T = any>(key: any, target: any) {
@@ -61,5 +62,25 @@ export function applyDecorators(...decorators: CallableFunction[]) {
   ) {
     const targetKey = descriptor ? descriptor.value : target;
     decorators.forEach((decorator) => decorator(targetKey));
+  };
+}
+
+export function createParamDecorator(
+  fn: (context: ExecutionContext) => any,
+): ParameterDecorator {
+  return function (
+    target: Object,
+    propertyKey: string | symbol | undefined,
+    paramIndex: number,
+  ) {
+    const params =
+      Reflect.getMetadata(PARAM, target, propertyKey as string | symbol) ?? [];
+    params[paramIndex] = fn;
+    Reflect.defineMetadata(
+      PARAM,
+      params,
+      target,
+      propertyKey as string | symbol,
+    );
   };
 }

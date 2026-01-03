@@ -168,7 +168,7 @@ export class Application {
     executionContext: ExecutionContext,
   ) {
     const params = Reflect.getMetadata(PARAM, target, propertyKey) as
-      | Array<string>
+      | Array<string | Function>
       | undefined;
 
     if (!params) return [];
@@ -206,6 +206,10 @@ export class Application {
           }
 
           return executionContext.payload;
+        }
+
+        if (typeof param === 'function') {
+          return param(executionContext);
         }
 
         return undefined;
