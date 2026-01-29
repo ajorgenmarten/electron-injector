@@ -9,3 +9,4 @@ export type {
 } from './types';
 export * from './utilities';
 export * from './errors';
+export * from './debugger';
