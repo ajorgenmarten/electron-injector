@@ -4,30 +4,61 @@
 
 Nace de la necesidad de crear aplicaciones de escritorio multiplataforma donde no solo importa la experiencia de usuario (UX), sino también una experiencia de desarrollo (DX) ágil y bien estructurada.
 
-## ✨ Características
-✅ Sistema de Inyección de Dependencias completo con contenedor IoC
+## ✨ ¿Por qué electron-injector?
+Electron es poderoso pero su arquitectura multi-proceso puede volverse caótica rápidamente. electron-injector resuelve esto proporcionando:
 
-✅ Decoradores para IPC (@OnSend, @OnInvoke) inspirados en NestJS
+✅ Arquitectura limpia - Separación clara de responsabilidades
 
-✅ Gestión automática de handlers de Electron IPC
+✅ Código mantenible - DI/IoC para un acoplamiento reducido
 
-✅ Soporte para Guards (autorización y validación)
+✅ Testing simplificado - Servicios fácilmente mockeables
 
-✅ Metadata reflection para parametrización avanzada
+✅ Comunicación IPC tipada - Seguridad en tiempo de compilación
 
-✅ Soporte para RxJS (Observables) en guards y handlers
+✅ Experiencia NestJS-like - Sintaxis familiar para full-stack developers
 
-✅ Control de ciclo de vida (singleton/transient)
 
-✅ Sistema de logging diferenciado (desarrollo/producción)
+## 🚀 Características
 
-✅ Detección de dependencias circulares
+### Core
+- Sistema de Inyección de Dependencias completo con contenedor IoC
 
-✅ Tipado TypeScript completo
+- Decoradores inspirados en NestJS para IPC (@OnSend, @OnInvoke)
+
+- Gestión automática de handlers de Electron IPC
+
+- Tipado TypeScript completo con inferencia automática
+
+### Seguridad & Validación
+- Guards para autorización y validación
+
+- Integración con class-validator para DTOs tipados
+
+- Metadata reflection para parametrización avanzada
+
+### Rendimiento & Control
+- Control de ciclo de vida (singleton/transient)
+
+- Detección de dependencias circulares
+
+- Sistema de logging diferenciado (dev/prod)
+
+- Soporte para RxJS en guards y handlers
+
 
 ## 📦 Instalación
 ```bash
 npm install electron-injector rxjs class-validator class-transformer
+```
+### Configuración TypeScript
+Asegúrate de habilitar estos flags en tu tsconfig.json:
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
 ```
 
 > **Nota:**  
@@ -39,7 +70,7 @@ npm install electron-injector rxjs class-validator class-transformer
 >
 > Luego, agrega el plugin de SWC en tu `vite.config.js` o `vite.config.ts` según la documentación de Vite y el plugin que utilices.
 
-## 1. Configuración Principal
+## 🎯 Empezando Rápido
 ```ts
 // main.ts
 import 'reflect-metadata';
@@ -58,7 +89,8 @@ function createWindow() {
         ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      partition: 'persist:your-app'
     }
   })
   

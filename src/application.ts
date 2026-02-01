@@ -111,13 +111,10 @@ export class Application {
             try {
               const response = await this.guardExecute(guard, executionContext);
               if (!response)
-                return {
-                  success: false,
-                  error: new ForbiddenAccessError(
-                    path,
-                    guard.constructor.prototype.name,
-                  ),
-                };
+                throw new ForbiddenAccessError(
+                  path,
+                  guard.constructor.prototype.name,
+                );
             } catch (e) {
               return await this.useFilter(e, executionContext);
             }
