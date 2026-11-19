@@ -200,6 +200,8 @@ export class Application {
             );
 
             if (errors.length) throw new DataValidationError(errors[0]);
+
+            return validatorObjectInstance;
           }
 
           return executionContext.payload;
